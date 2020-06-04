@@ -62,6 +62,12 @@ module ScimRails
       json_scim_response(object: user)
     end
 
+    def destroy
+      user = @company.public_send(ScimRails.config.scim_users_scope).find(params[:id])
+      user.destroy!
+      json_scim_response(object: user)
+    end
+
     private
 
     def permitted_user_params

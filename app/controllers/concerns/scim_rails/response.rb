@@ -9,16 +9,16 @@ module ScimRails
         content_type: CONTENT_TYPE
     end
 
-    def json_scim_response(object:, status: :ok, counts: nil)
+    def json_scim_response(object:, status: :ok, counts: nil, type: nil)
       case params[:action]
       when "index"
         render \
-          json: list_response(object, counts),
+          json: list_response(object, counts, type),
           status: status,
           content_type: CONTENT_TYPE
       when "show", "create", "put_update", "patch_update"
         render \
-          json: user_response(object),
+          json: type == "group" ? group_response(object) : user_response(object),
           status: status,
           content_type: CONTENT_TYPE
       when "destroy"
@@ -31,7 +31,7 @@ module ScimRails
 
     private
 
-    def list_response(object, counts)
+    def list_response(object, counts, type=nil)
       object = object
         .order(:id)
         .offset(counts.offset)
@@ -43,9 +43,10 @@ module ScimRails
         "totalResults": counts.total,
         "startIndex": counts.start_index,
         "itemsPerPage": counts.limit,
-        "Resources": list_users(object)
+        "Resources": type == "group" ? list_groups(object) : list_users(object)
       }
     end
+
 
     def list_users(users)
       users.map do |user|
@@ -58,6 +59,16 @@ module ScimRails
       find_value(user, schema)
     end
 
+    def list_groups(groups)
+      groups.map do |group|
+        group_response(group)
+      end
+    end
+
+    def group_response(group)
+      schema = ScimRails.config.group_schema
+      find_value(group, schema)
+    end    
 
     # `find_value` is a recursive method that takes a "user" and a
     # "user schema" and replaces any symbols in the schema with the

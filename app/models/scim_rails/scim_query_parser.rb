@@ -1,9 +1,11 @@
 module ScimRails
   class ScimQueryParser
     attr_accessor :query_elements
+    attr_accessor :resource_type
 
-    def initialize(query_string)
+    def initialize(query_string, resource_type=nil)
       self.query_elements = query_string.split(" ")
+      self.resource_type = resource_type
     end
 
     def attribute
@@ -29,7 +31,11 @@ module ScimRails
     private
 
     def attribute_mapping(attribute)
-      ScimRails.config.queryable_user_attributes[attribute]
+      if resource_type == "group"
+        ScimRails.config.queryable_group_attributes[attribute]
+      else
+        ScimRails.config.queryable_user_attributes[attribute]
+      end
     end
 
     def sql_comparison_operator(element)

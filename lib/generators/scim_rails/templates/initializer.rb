@@ -11,12 +11,14 @@ ScimRails.configure do |config|
   # Attribute will need to return plaintext for comparison.
   config.basic_auth_model_authenticatable_attribute = :api_token
 
-  # Model used for user records.
+  # Model used for user/group records.
   config.scim_users_model = "User"
+  config.scim_groups_model = "Group"
 
-  # Method used for retriving user records from the
+  # Method used for retriving user/group records from the
   # authenticatable model.
   config.scim_users_scope = :users
+  config.scim_groups_scope = :groups
 
   # Determine whether the create endpoint updates users that already exist
   # or throws an error (returning 409 Conflict in accordance with SCIM spec)
@@ -39,6 +41,7 @@ ScimRails.configure do |config|
   # the below line and configure a determinate order.
   # For example, [:created_at, :id] or { created_at: :desc }.
   # config.scim_users_list_order = :id
+  # config.scim_groups_list_order = :id
 
   # Method called on user model to deprovision a user.
   config.user_deprovision_method = :archive!
@@ -46,19 +49,23 @@ ScimRails.configure do |config|
   # Method called on user model to reprovision a user.
   config.user_reprovision_method = :unarchive!
 
-  # Hash of queryable attribtues on the user model. If
+  # Hash of queryable attribtues on the user/group model. If
   # the attribute is not listed in this hash it cannot
   # be queried by this Gem. The structure of this hash
-  # is { queryable_scim_attribute => user_attribute }.
+  # is { queryable_scim_attribute => user_attribute } and
+  # { queryable_group_attribute => group_attribute }.
   config.queryable_user_attributes = {
     userName: :email,
     givenName: :first_name,
     familyName: :last_name,
     email: :email
   }
+  config.queryable_group_attributes = {
+    displayName: :name
+  }
 
   # Array of attributes that can be modified on the
-  # user model. If the attribute is not in this array
+  # user/group model. If the attribute is not in this array
   # the attribute cannot be modified by this Gem.
   config.mutable_user_attributes = [
     :first_name,
@@ -70,7 +77,8 @@ ScimRails.configure do |config|
   # for this Gem to figure out where to look in a SCIM
   # response for mutable values. This object should
   # include all attributes listed in
-  # config.mutable_user_attributes.
+  # config.mutable_user_attributes and
+  # config.mutable_group_attributes.
   config.mutable_user_attributes_schema = {
     name: {
       givenName: :first_name,
@@ -82,13 +90,16 @@ ScimRails.configure do |config|
       }
     ]
   }
+  config.mutable_group_attributes = [
+    :members
+  ]
 
-  # Hash of SCIM structure for a user schema. This object
-  # is what will be returned for a given user. The keys
+  # Hash of SCIM structure for a user/group schema. This object
+  # is what will be returned for a given user/group. The keys
   # in this object should conform to standard SCIM
   # structures. The values in the object will be
-  # transformed per user record. Strings will be passed
-  # through as is, symbols will be passed to the user
+  # transformed per user/group record. Strings will be passed
+  # through as is, symbols will be passed to the user/group
   # object to return a value.
   config.user_schema = {
     schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"],
@@ -104,5 +115,11 @@ ScimRails.configure do |config|
       },
     ],
     active: :active?
+  }
+  config.group_schema = {
+    schemas: ["urn:ietf:params:scim:schemas:core:2.0:Group"],
+    id: :id,
+    displayName: :name,
+    members: :members
   }
 end
